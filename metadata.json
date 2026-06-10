@@ -1,0 +1,6 @@
+{
+  "name": "EcoTrack AI",
+  "description": "EcoTrack AI – Personal Carbon Footprint Intelligence Platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

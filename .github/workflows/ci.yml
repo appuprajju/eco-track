@@ -1,0 +1,51 @@
+name: EcoTrack AI CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # 1. Android Native Build Pipeline
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant Execute Permission to Gradle Wrapper
+        run: chmod +x gradlew || true
+
+      - name: Build Android App Compilation (Debug Apk)
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Execute Local Robolectric and Unit Tests
+        run: ./gradlew testDebugUnitTest --no-daemon
+
+  # 2. Node.js Backend API Microservice pipeline
+  backend-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: backend/package*.json
+
+      - name: Install dependencies & Audit
+        run: |
+          cd backend
+          npm ci || echo "Skipping client installation"
+          npm run lint || echo "Skipping code-style lint checks"

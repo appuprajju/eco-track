@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:plantTealGreen@postgres_db:5432/ecotrack_db
+      - REDIS_URL=redis://redis_cache:6379
+      - JWT_SECRET=super_secret_organic_key
+      - REFRESH_SECRET=refresh_clean_air_vortex
+    depends_on:
+      - postgres_db
+      - redis_cache
+    restart: always
+
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: ecotrack_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=plantTealGreen
+      - POSTGRES_DB=ecotrack_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: always
+
+  redis_cache:
+    image: redis:7-alpine
+    container_name: ecotrack_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
