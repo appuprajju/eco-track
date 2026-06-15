@@ -5,7 +5,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_organic_key';
 const REFRESH_SECRET = process.env.REFRESH_SECRET || 'refresh_clean_air_vortex';
 

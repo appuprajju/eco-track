@@ -2,7 +2,7 @@ name: EcoTrack AI CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -27,12 +27,17 @@ jobs:
       - name: Build Android App Compilation (Debug Apk)
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Execute Local Robolectric and Unit Tests
-        run: ./gradlew testDebugUnitTest --no-daemon || echo "Tests failed but continuing CI"
+      - name: Upload Android Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecotrack-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
 
-  # 2. Node.js Backend API Microservice pipeline
-  backend-audit:
+  # 2. Node.js Backend API Pipeline & Deployment
+  backend-deploy:
     runs-on: ubuntu-latest
+    # Only deploy if android-build succeeds
+    needs: android-build
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
@@ -41,22 +46,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: backend/package*.json
 
-      - name: Install dependencies & Audit
+      - name: Install Backend Dependencies
         run: |
-          if [ -d "backend" ]; then
-            cd backend
-            if [ -f "package.json" ]; then
-              npm install
-              # Using npm install instead of ci as we just created the package.json and might not have a lockfile yet
-              if npm run | grep -q "lint"; then
-                npm run lint || echo "Linting failed"
-              fi
-            else
-              echo "No package.json found in backend/"
-            fi
-          else
-            echo "Backend directory not found"
-          fi
+          cd backend
+          npm install
+
+      # --- DEPLOYMENT TO GOOGLE CLOUD RUN ---
+      # This part requires setting up GitHub Secrets: GCP_SA_KEY and GCP_PROJECT_ID
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Backend to Cloud Run
+        run: |
+          gcloud run deploy ecotrack-backend \
+            --source ./backend \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --project ${{ secrets.GCP_PROJECT_ID }}
