@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Required to allow GitHub to request the OIDC token from Google Cloud
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
 jobs:
   # 1. Android Native Build Pipeline
   android-build:
@@ -36,7 +41,6 @@ jobs:
   # 2. Node.js Backend API Pipeline & Deployment
   backend-deploy:
     runs-on: ubuntu-latest
-    # Only deploy if android-build succeeds
     needs: android-build
     steps:
       - name: Checkout Code Repository
@@ -52,13 +56,14 @@ jobs:
           cd backend
           npm install
 
-      # --- DEPLOYMENT TO GOOGLE CLOUD RUN ---
-      # This part requires setting up GitHub Secrets: GCP_SA_KEY and GCP_PROJECT_ID
+      # --- SECURE DEPLOYMENT TO GOOGLE CLOUD RUN ---
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: 'projects/177858659456/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-deployer@ecotrack-499113.iam.gserviceaccount.com'
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
