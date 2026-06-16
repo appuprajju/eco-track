@@ -1,11 +1,10 @@
 {
   "name": "ecotrack-backend",
   "version": "1.0.0",
-  "description": "EcoTrack AI TypeScript Backend",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/src/index.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
