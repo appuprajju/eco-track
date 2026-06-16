@@ -3,7 +3,7 @@ FROM node:18-alpine AS builder
 WORKDIR /usr/src/app
 COPY package*.json tsconfig.json ./
 RUN npm install
-COPY index.ts ./
+COPY src/ ./src
 RUN npm run build
 
 # --- Stage 2: Production Execution ---
