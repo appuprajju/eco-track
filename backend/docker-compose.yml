@@ -3,7 +3,7 @@ version: '3.8'
 services:
   api:
     build:
-      context: .
+      context: ./backend  # 1. FIXED: Pointed to the backend folder explicitly if running from root
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
@@ -14,8 +14,10 @@ services:
       - JWT_SECRET=super_secret_organic_key
       - REFRESH_SECRET=refresh_clean_air_vortex
     depends_on:
-      - postgres_db
-      - redis_cache
+      postgres_db:
+        condition: service_healthy # 2. FIXED: Wait for database to fully accept connections
+      redis_cache:
+        condition: service_started
     restart: always
 
   postgres_db:
@@ -29,7 +31,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql # 3. FIXED: Adjusted relative path
+    # Health check ensuring database is ready before API launches
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecotrack_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: always
 
   redis_cache:
