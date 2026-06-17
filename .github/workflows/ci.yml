@@ -76,6 +76,7 @@ jobs:
             --project ${{ secrets.GCP_PROJECT_ID }}
             --no-logs-stream
 
+
       - name: Deploy Backend to Cloud Run
         run: |
           gcloud run deploy ecotrack-backend \
