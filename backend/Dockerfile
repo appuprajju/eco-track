@@ -1,34 +1,21 @@
-# --- Stage 1: Build & Compile TypeScript ---
-FROM node:18 AS builder
-WORKDIR /usr/src/app
+FROM node:18-alpine
 
-# Copy dependency manifests
-COPY package*.json tsconfig.json ./
+WORKDIR /app
 
-# Install ALL dependencies (including typescript and compilation tools)
-RUN npm install
-
-# Copy your application source code
-COPY src/ ./src
-
-# Compile TypeScript to JavaScript
-RUN npm run build
-
-# --- Stage 2: Production Execution ---
-FROM node:18-slim
-WORKDIR /usr/src/app
-
-# Copy dependency manifests
+# Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
+# Install dependencies
 RUN npm ci --only=production
 
-# Copy the compiled code from Stage 1
-COPY --from=builder /usr/src/app/dist ./dist
+# Copy application code
+COPY . .
 
-# Standard Cloud Run port exposure
+# Expose port (adjust if your app uses a different port)
 EXPOSE 8080
 
-# Execute the compiled server
-CMD [ "npm", "start" ]
+# Set environment variable for Cloud Run
+ENV PORT=8080
+
+# Start the application
+CMD ["node", "server.js"]
