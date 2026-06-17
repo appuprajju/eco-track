@@ -74,6 +74,7 @@ jobs:
           gcloud builds submit backend/ \
             --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/ecotrack-backend:latest \
             --project ${{ secrets.GCP_PROJECT_ID }}
+            --no-logs-stream
 
       - name: Deploy Backend to Cloud Run
         run: |
